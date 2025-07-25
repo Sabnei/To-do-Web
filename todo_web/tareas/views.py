@@ -14,30 +14,38 @@ def inicio(request):
     total_tareas = Tarea.objects.count()
     tareas_completadas = Tarea.objects.filter(completado=True).count()
     tareas_pendientes = Tarea.objects.filter(completado=False).count()
-    
+
     # Tareas por prioridad
-    tareas_alta = Tarea.objects.filter(prioridad='alta', completado=False).count()
-    tareas_media = Tarea.objects.filter(prioridad='media', completado=False).count()
-    tareas_baja = Tarea.objects.filter(prioridad='baja', completado=False).count()
-    
+    tareas_alta = Tarea.objects.filter(
+        prioridad="alta", completado=False
+    ).count()
+    tareas_media = Tarea.objects.filter(
+        prioridad="media", completado=False
+    ).count()
+    tareas_baja = Tarea.objects.filter(
+        prioridad="baja", completado=False
+    ).count()
+
     # Tareas recientes (últimas 5)
-    tareas_recientes = Tarea.objects.order_by('-id')[:5]
-    
+    tareas_recientes = Tarea.objects.order_by("-id")[:5]
+
     # Tareas urgentes (alta prioridad y pendientes)
-    tareas_urgentes = Tarea.objects.filter(prioridad='alta', completado=False)[:3]
-    
+    tareas_urgentes = Tarea.objects.filter(prioridad="alta", completado=False)[
+        :3
+    ]
+
     context = {
-        'total_tareas': total_tareas,
-        'tareas_completadas': tareas_completadas,
-        'tareas_pendientes': tareas_pendientes,
-        'tareas_alta': tareas_alta,
-        'tareas_media': tareas_media,
-        'tareas_baja': tareas_baja,
-        'tareas_recientes': tareas_recientes,
-        'tareas_urgentes': tareas_urgentes,
+        "total_tareas": total_tareas,
+        "tareas_completadas": tareas_completadas,
+        "tareas_pendientes": tareas_pendientes,
+        "tareas_alta": tareas_alta,
+        "tareas_media": tareas_media,
+        "tareas_baja": tareas_baja,
+        "tareas_recientes": tareas_recientes,
+        "tareas_urgentes": tareas_urgentes,
     }
-    
-    return render(request, 'tareas/inicio.html', context)
+
+    return render(request, "tareas/inicio.html", context)
 
 
 def lista_tareas(request):

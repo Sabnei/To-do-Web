@@ -61,6 +61,43 @@ body {
     box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
 }
 
+/* Placeholders en blanco */
+.form-control::placeholder {
+    color: white !important;
+    opacity: 0.8;
+}
+
+.form-control::-webkit-input-placeholder {
+    color: white !important;
+    opacity: 0.8;
+}
+
+.form-control::-moz-placeholder {
+    color: white !important;
+    opacity: 0.8;
+}
+
+.form-control:-ms-input-placeholder {
+    color: white !important;
+    opacity: 0.8;
+}
+
+.form-control:-moz-placeholder {
+    color: white !important;
+    opacity: 0.8;
+}
+
+/* Contador de caracteres en blanco */
+.form-text {
+    color: white !important;
+    opacity: 0.8;
+}
+
+.form-text.text-warning {
+    color: #ffc107 !important;
+    opacity: 1;
+}
+
 /* Badges personalizados */
 .badge {
     border-radius: 8px;
