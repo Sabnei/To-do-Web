@@ -1,6 +1,6 @@
 <h1>📋 Lista de Tareas</h1>
 
-<form method="get">
+<form method="get" action="{% url 'lista_tareas' %}">
     <label>Prioridad:</label>
     <select name="prioridad">
         <option value="">-- Todas --</option>
@@ -12,8 +12,25 @@
     <label>Etiqueta:</label>
     <input type="text" name="etiqueta" value="{{ etiqueta }}">
 
+    <label>Estado:</label>
+    <select name="completado">
+        <option value="">-- Todos --</option>
+        <option value="completado" {% if estado_seleccionado == 'completado' %}selected{% endif %}>Completado</option>
+        <option value="pendiente" {% if estado_seleccionado == 'pendiente' %}selected{% endif %}>Pendiente</option>
+    </select>
+
     <button type="submit">Filtrar</button>
     <a href="{% url 'lista_tareas' %}">Reiniciar</a>
+</form>
+
+<form method="get" action="{% url 'exportar_pdf' %}">
+    {% if prioridad_seleccionada %}
+        <input type="hidden" name="prioridad" value="{{ prioridad_seleccionada }}">
+    {% endif %}
+    {% if etiqueta %}
+        <input type="hidden" name="etiqueta" value="{{ etiqueta }}">
+    {% endif %}
+    <button type="submit">📄 Exportar PDF</button>
 </form>
 
 <hr>
