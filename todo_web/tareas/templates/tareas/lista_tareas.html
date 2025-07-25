@@ -1,52 +1,170 @@
-<h1>📋 Lista de Tareas</h1>
+{% extends 'tareas/base.html' %}
 
-<form method="get" action="{% url 'lista_tareas' %}">
-    <label>Prioridad:</label>
-    <select name="prioridad">
-        <option value="">-- Todas --</option>
-        <option value="alta" {% if prioridad_seleccionada == 'alta' %}selected{% endif %}>Alta</option>
-        <option value="media" {% if prioridad_seleccionada == 'media' %}selected{% endif %}>Media</option>
-        <option value="baja" {% if prioridad_seleccionada == 'baja' %}selected{% endif %}>Baja</option>
-    </select>
+{% block title %}📋 Lista de Tareas{% endblock %}
 
-    <label>Etiqueta:</label>
-    <input type="text" name="etiqueta" value="{{ etiqueta }}">
+{% block extra_css %}
+<style>
+    .task-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .task-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .priority-badge {
+        font-size: 0.8rem;
+    }
+    .completed-task {
+        opacity: 0.7;
+    }
+    .filter-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+</style>
+{% endblock %}
 
-    <label>Estado:</label>
-    <select name="completado">
-        <option value="">-- Todos --</option>
-        <option value="completado" {% if estado_seleccionado == 'completado' %}selected{% endif %}>Completado</option>
-        <option value="pendiente" {% if estado_seleccionado == 'pendiente' %}selected{% endif %}>Pendiente</option>
-    </select>
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="bg-primary text-white p-4 mb-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h1 class="mb-0"><i class="fas fa-tasks me-2"></i>Lista de Tareas</h1>
+                    <a href="{% url 'agregar_tarea' %}" class="btn btn-light">
+                        <i class="fas fa-plus me-1"></i>Nueva Tarea
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <button type="submit">Filtrar</button>
-    <a href="{% url 'lista_tareas' %}">Reiniciar</a>
-</form>
+    <!-- Filtros -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card filter-section border-0">
+                <div class="card-body">
+                    <h5 class="card-title mb-3"><i class="fas fa-filter me-2"></i>Filtros</h5>
+                    <form method="get" action="{% url 'lista_tareas' %}" class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Prioridad:</label>
+                            <select name="prioridad" class="form-select">
+                                <option value="">-- Todas --</option>
+                                <option value="alta" {% if prioridad_seleccionada == 'alta' %}selected{% endif %}>Alta</option>
+                                <option value="media" {% if prioridad_seleccionada == 'media' %}selected{% endif %}>Media</option>
+                                <option value="baja" {% if prioridad_seleccionada == 'baja' %}selected{% endif %}>Baja</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Etiqueta:</label>
+                            <input type="text" name="etiqueta" value="{{ etiqueta }}" class="form-control" placeholder="Buscar por etiqueta">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Estado:</label>
+                            <select name="completado" class="form-select">
+                                <option value="">-- Todos --</option>
+                                <option value="completado" {% if estado_seleccionado == 'completado' %}selected{% endif %}>Completado</option>
+                                <option value="pendiente" {% if estado_seleccionado == 'pendiente' %}selected{% endif %}>Pendiente</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-light">
+                                    <i class="fas fa-search me-1"></i>Filtrar
+                                </button>
+                                <a href="{% url 'lista_tareas' %}" class="btn btn-outline-light">
+                                    <i class="fas fa-undo me-1"></i>Reiniciar
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 
-<form method="get" action="{% url 'exportar_pdf' %}">
-    {% if prioridad_seleccionada %}
-        <input type="hidden" name="prioridad" value="{{ prioridad_seleccionada }}">
-    {% endif %}
-    {% if etiqueta %}
-        <input type="hidden" name="etiqueta" value="{{ etiqueta }}">
-    {% endif %}
-    <button type="submit">📄 Exportar PDF</button>
-</form>
+    <!-- Exportar PDF -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <form method="get" action="{% url 'exportar_pdf' %}" class="d-inline">
+                {% if prioridad_seleccionada %}
+                    <input type="hidden" name="prioridad" value="{{ prioridad_seleccionada }}">
+                {% endif %}
+                {% if etiqueta %}
+                    <input type="hidden" name="etiqueta" value="{{ etiqueta }}">
+                {% endif %}
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-file-pdf me-1"></i>Exportar PDF
+                </button>
+            </form>
+        </div>
+    </div>
 
-<hr>
-<a href="{% url 'agregar_tarea' %}">➕ Agregar nueva tarea</a>
-<ul>
-    {% for tarea in tareas %}
-    <li>
-        {% if tarea.completado %}<s>{% endif %}
-        {{ tarea.descripcion }} - {{ tarea.prioridad }}
-        {% if tarea.completado %}</s>{% endif %}
-        {% if not tarea.completado %}
-            <a href="{% url 'completar_tarea' tarea.id %}">✅ Completar</a>
-        {% endif %}
-        <a href="{% url 'eliminar_tarea' tarea.id %}">❌ Eliminar</a>
-    </li>
-    {% empty %}
-    <li>No hay tareas que coincidan con el filtro.</li>
-    {% endfor %}
-</ul>
+    <!-- Lista de Tareas -->
+    <div class="row">
+        {% for tarea in tareas %}
+        <div class="col-lg-4 col-md-6 mb-3">
+            <div class="card task-card h-100 {% if tarea.completado %}completed-task{% endif %}">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h6 class="card-title mb-0 {% if tarea.completado %}text-decoration-line-through{% endif %}">
+                            {{ tarea.descripcion }}
+                        </h6>
+                        <span class="badge priority-badge 
+                            {% if tarea.prioridad == 'alta' %}bg-danger
+                            {% elif tarea.prioridad == 'media' %}bg-warning
+                            {% else %}bg-success{% endif %}">
+                            {{ tarea.prioridad|title }}
+                        </span>
+                    </div>
+                    
+                    {% if tarea.fecha_limite %}
+                    <p class="card-text small text-muted mb-2">
+                        <i class="fas fa-calendar-alt me-1"></i>
+                        Fecha límite: {{ tarea.fecha_limite }}
+                    </p>
+                    {% endif %}
+                    
+                    {% if tarea.tags %}
+                    <p class="card-text small text-muted mb-3">
+                        <i class="fas fa-tags me-1"></i>
+                        {{ tarea.tags }}
+                    </p>
+                    {% endif %}
+                    
+                    <div class="d-flex gap-2">
+                        {% if not tarea.completado %}
+                            <a href="{% url 'completar_tarea' tarea.id %}" class="btn btn-success btn-sm">
+                                <i class="fas fa-check me-1"></i>Completar
+                            </a>
+                        {% else %}
+                            <a href="{% url 'completar_tarea' tarea.id %}" class="btn btn-warning btn-sm">
+                                <i class="fas fa-undo me-1"></i>Deshacer
+                            </a>
+                        {% endif %}
+                        <a href="{% url 'eliminar_tarea' tarea.id %}" class="btn btn-danger btn-sm" 
+                           onclick="return confirm('¿Estás seguro de que quieres eliminar esta tarea?')">
+                            <i class="fas fa-trash me-1"></i>Eliminar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No hay tareas que coincidan con el filtro</h5>
+                    <p class="text-muted">Intenta cambiar los filtros o crear una nueva tarea</p>
+                    <a href="{% url 'agregar_tarea' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i>Crear Primera Tarea
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

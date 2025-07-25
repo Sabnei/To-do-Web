@@ -1,15 +1,112 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Agregar Tarea</title>
-</head>
-<body>
-    <h1>➕ Nueva Tarea</h1>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Guardar</button>
-    </form>
-    <a href="{% url 'lista_tareas' %}">⬅ Volver</a>
-</body>
-</html>
+{% extends 'tareas/base.html' %}
+
+{% block title %}➕ Nueva Tarea{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: calc(100vh - 200px);
+        padding: 2rem 0;
+    }
+    .form-card {
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        border-radius: 15px;
+    }
+    .form-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px 15px 0 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-6 col-md-8">
+                <div class="card form-card">
+                    <div class="card-header form-header text-center py-4">
+                        <h2 class="mb-0">
+                            <i class="fas fa-plus-circle me-2"></i>Nueva Tarea
+                        </h2>
+                        <p class="mb-0 mt-2 opacity-75">Completa los detalles de tu nueva tarea</p>
+                    </div>
+                    <div class="card-body p-4">
+                        <form method="post">
+                            {% csrf_token %}
+                            
+                            <!-- Descripción -->
+                            <div class="mb-3">
+                                <label for="{{ form.descripcion.id_for_label }}" class="form-label">
+                                    <i class="fas fa-edit me-1"></i>Descripción
+                                </label>
+                                {{ form.descripcion }}
+                                {% if form.descripcion.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.descripcion.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Prioridad -->
+                            <div class="mb-3">
+                                <label for="{{ form.prioridad.id_for_label }}" class="form-label">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>Prioridad
+                                </label>
+                                {{ form.prioridad }}
+                                {% if form.prioridad.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.prioridad.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Fecha límite -->
+                            <div class="mb-3">
+                                <label for="{{ form.fecha_limite.id_for_label }}" class="form-label">
+                                    <i class="fas fa-calendar-alt me-1"></i>Fecha límite
+                                </label>
+                                {{ form.fecha_limite }}
+                                {% if form.fecha_limite.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.fecha_limite.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Etiquetas -->
+                            <div class="mb-4">
+                                <label for="{{ form.tags.id_for_label }}" class="form-label">
+                                    <i class="fas fa-tags me-1"></i>Etiquetas
+                                </label>
+                                {{ form.tags }}
+                                <div class="form-text">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Separa las etiquetas con comas (ej: trabajo, urgente, proyecto)
+                                </div>
+                                {% if form.tags.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.tags.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Botones -->
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <a href="{% url 'lista_tareas' %}" class="btn btn-outline-secondary me-md-2">
+                                    <i class="fas fa-arrow-left me-1"></i>Cancelar
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-1"></i>Guardar Tarea
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
