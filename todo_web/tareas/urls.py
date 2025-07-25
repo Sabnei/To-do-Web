@@ -1,7 +1,7 @@
 from django.urls import path
 from . import views
 
-urlpatterns = {
+urlpatterns = [
     path("", views.list_tareas, name="lista_tareas"),
     path("agregar/", views.agregar_tarea, name="agregar_tarea"),
     path(
@@ -12,5 +12,4 @@ urlpatterns = {
     path(
         "eliminar/<int:tarea_id>/", views.eliminar_tarea, name="eliminar_tarea"
     ),
-}
-
+]
