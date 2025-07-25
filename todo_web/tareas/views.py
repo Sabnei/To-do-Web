@@ -5,8 +5,28 @@ from .forms import TareaForm
 
 # Create your views here.
 def list_tareas(request):
-    tareas = Tarea.objects.all().order_by("completado", "prioridad")
-    return render(request, "tareas/lista_tareas.html", {"tareas": tareas})
+    tareas = Tarea.objects.all()
+
+    prioridad = request.GET.get("prioridad")
+    etiqueta = request.GET.get("etiqueta")
+
+    if prioridad:
+        tareas = tareas.filter(prioridad=prioridad)
+
+    if etiqueta:
+        tareas = tareas.filter(tags__icontains=etiqueta)
+
+    tareas = tareas.order_by("completado", "prioridad")
+
+    return render(
+        request,
+        "tareas/lista_tareas.html",
+        {
+            "tareas": tareas,
+            "prioridad_seleccionada": prioridad or "",
+            "etiqueta": etiqueta or "",
+        },
+    )
 
 
 def agregar_tarea(request):
