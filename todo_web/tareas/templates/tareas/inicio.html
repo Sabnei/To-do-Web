@@ -78,31 +78,37 @@
             <h2 class="mb-4 text-dark"><i class="fas fa-chart-bar me-2"></i>Resumen de Tareas</h2>
         </div>
         <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card stats-card bg-primary text-white">
-                <div class="card-body text-center">
-                    <i class="fas fa-tasks fa-2x mb-3"></i>
-                    <h3 class="card-title">{{ total_tareas }}</h3>
-                    <p class="card-text">Total de Tareas</p>
+            <a href="{% url 'lista_tareas' %}" class="text-decoration-none">
+                <div class="card stats-card bg-primary text-white">
+                    <div class="card-body text-center">
+                        <i class="fas fa-tasks fa-2x mb-3"></i>
+                        <h3 class="card-title">{{ total_tareas }}</h3>
+                        <p class="card-text">Total de Tareas</p>
+                    </div>
                 </div>
-            </div>
+            </a>
         </div>
         <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card stats-card bg-success text-white">
-                <div class="card-body text-center">
-                    <i class="fas fa-check-circle fa-2x mb-3"></i>
-                    <h3 class="card-title">{{ tareas_completadas }}</h3>
-                    <p class="card-text">Completadas</p>
+            <a href="{% url 'lista_tareas' %}?completado=completado" class="text-decoration-none">
+                <div class="card stats-card bg-success text-white">
+                    <div class="card-body text-center">
+                        <i class="fas fa-check-circle fa-2x mb-3"></i>
+                        <h3 class="card-title">{{ tareas_completadas }}</h3>
+                        <p class="card-text">Completadas</p>
+                    </div>
                 </div>
-            </div>
+            </a>
         </div>
         <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card stats-card bg-warning text-white">
-                <div class="card-body text-center">
-                    <i class="fas fa-clock fa-2x mb-3"></i>
-                    <h3 class="card-title">{{ tareas_pendientes }}</h3>
-                    <p class="card-text">Pendientes</p>
+            <a href="{% url 'lista_tareas' %}?completado=pendiente" class="text-decoration-none">
+                <div class="card stats-card bg-warning text-white">
+                    <div class="card-body text-center">
+                        <i class="fas fa-clock fa-2x mb-3"></i>
+                        <h3  class="card-title">{{ tareas_pendientes }}</h3>
+                        <p class="card-text">Pendientes</p>
+                    </div>
                 </div>
-            </div>
+            </a>
         </div>
         <div class="col-lg-3 col-md-6 mb-3">
             <div class="card stats-card bg-danger text-white">
