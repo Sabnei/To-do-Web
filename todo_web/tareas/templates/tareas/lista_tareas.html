@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>To-Do List</title>
+</head>
+<body>
+    <h1>📋 Lista de Tareas</h1>
+    <a href="{% url 'agregar_tarea' %}">➕ Agregar nueva tarea</a>
+    <ul>
+        {% for tarea in tareas %}
+        <li>
+            {% if tarea.completado %}<s>{% endif %}
+            {{ tarea.descripcion }} - {{ tarea.prioridad }}
+            {% if tarea.completado %}</s>{% endif %}
+            {% if not tarea.completado %}
+                <a href="{% url 'completar_tarea' tarea.id %}">✅ Completar</a>
+            {% endif %}
+            <a href="{% url 'eliminar_tarea' tarea.id %}">❌ Eliminar</a>
+        </li>
+        {% empty %}
+        <li>No hay tareas.</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
