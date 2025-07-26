@@ -1,15 +1,15 @@
 # 📋 Gestor de Tareas con Django y Bootstrap
 
-Una aplicación web moderna y responsive para gestionar tareas personales y profesionales, desarrollada con Django y Bootstrap 5.
+Una aplicación web moderna y responsive para gestionar tareas personales y profesionales, desarrollada con Django 4.x y Bootstrap 5.
 
 ## ✨ Características
 
 ### 🎨 Diseño Moderno
 - **Bootstrap 5**: Interfaz moderna y responsive
 - **Font Awesome**: Iconos profesionales
-- **Gradientes y efectos**: Diseño atractivo con efectos visuales
+- **Gradientes CSS**: Diseño atractivo con efectos visuales
 - **Animaciones CSS**: Transiciones suaves y efectos hover
-- **Modo oscuro**: Soporte opcional para modo oscuro
+- **Modo oscuro**: Soporte opcional para modo oscuro (prefers-color-scheme)
 
 ### 📊 Dashboard Interactivo
 - **Página de inicio**: Estadísticas en tiempo real
@@ -33,31 +33,32 @@ Una aplicación web moderna y responsive para gestionar tareas personales y prof
 - **Etiquetas**: Organización por categorías
 
 ### 📄 Exportación
-- **Exportar a PDF**: Generación de reportes
+- **Exportar a PDF**: Generación de reportes con ReportLab
 - **Filtros aplicados**: Respeta los filtros activos
 - **Formato profesional**: Diseño limpio para impresión
 
 ## 🚀 Tecnologías Utilizadas
 
-- **Backend**: Django 4.x
+- **Backend**: Django 4.2+
 - **Frontend**: Bootstrap 5.3.0
 - **Iconos**: Font Awesome 6.4.0
 - **JavaScript**: Vanilla JS con efectos modernos
 - **CSS**: Estilos personalizados con variables CSS
 - **Base de datos**: SQLite (configurable)
+- **PDF**: ReportLab 4.0+
 
 ## 📦 Instalación
 
 1. **Clonar el repositorio**:
 ```bash
-git clone <url-del-repositorio>
+git clone https://github.com/Sabnei/To-do-Web.git
 cd To-do-Web
 ```
 
 2. **Crear entorno virtual**:
 ```bash
-python -m venv venv
-source venv/bin/activate  # En Windows: venv\Scripts\activate
+python -m venv .venv
+source .venv/bin/activate  # En Windows: .venv\Scripts\activate
 ```
 
 3. **Instalar dependencias**:
@@ -91,21 +92,21 @@ http://localhost:8000
 
 ### Página de Inicio (`/`)
 - Dashboard con estadísticas en tiempo real
-- Vista de tareas urgentes
-- Tareas recientes
-- Acciones rápidas
+- Vista de tareas urgentes (prioridad alta)
+- Tareas recientes (últimas 5 creadas)
+- Acciones rápidas para crear y gestionar tareas
 
 ### Lista de Tareas (`/tareas/`)
-- Vista en cards responsive
-- Filtros avanzados
-- Exportación a PDF
-- Acciones por tarea
+- Vista en cards responsive con Bootstrap
+- Filtros avanzados por prioridad, estado y etiquetas
+- Exportación a PDF con filtros aplicados
+- Acciones por tarea (completar, eliminar)
 
 ### Nueva Tarea (`/agregar/`)
 - Formulario con validación en tiempo real
-- Contador de caracteres
+- Contador de caracteres dinámico
 - Sugerencias de etiquetas
-- Diseño moderno
+- Diseño moderno con efectos visuales
 
 ## 🎨 Características de Diseño
 
@@ -118,11 +119,11 @@ http://localhost:8000
 - **Hover Effects**: Animaciones en cards y botones
 - **Transiciones**: Movimientos suaves entre estados
 - **Gradientes**: Fondos modernos con gradientes CSS
-- **Sombras**: Efectos de profundidad
+- **Sombras**: Efectos de profundidad y elevación
 
 ### Interactividad
 - **JavaScript**: Validación en tiempo real
-- **Confirmaciones**: Diálogos de confirmación
+- **Confirmaciones**: Diálogos de confirmación para eliminación
 - **Animaciones**: Efectos de carga y transición
 - **Tooltips**: Información contextual
 
@@ -148,29 +149,58 @@ http://localhost:8000
 ```
 
 ### Personalización de Colores
-Los colores y gradientes se pueden personalizar modificando las variables CSS en `static/tareas/css/style.css`.
+Los colores y gradientes se pueden personalizar modificando las variables CSS en `todo_web/tareas/static/tareas/css/style.css`.
 
 ## 📊 Estructura del Proyecto
 
 ```
-todo_web/
-├── tareas/
-│   ├── templates/tareas/
-│   │   ├── base.html          # Template base con Bootstrap
-│   │   ├── inicio.html        # Dashboard principal
-│   │   ├── lista_tareas.html  # Lista con filtros
-│   │   └── agregar_tarea.html # Formulario de creación
-│   ├── static/tareas/
-│   │   ├── css/style.css      # Estilos personalizados
-│   │   └── js/app.js          # JavaScript interactivo
-│   ├── models.py              # Modelo de datos
-│   ├── views.py               # Lógica de negocio
-│   ├── forms.py               # Formularios
-│   └── urls.py                # Rutas de la aplicación
-└── todo_web/
-    ├── settings.py            # Configuración de Django
-    └── urls.py                # URLs principales
+To-do-Web/
+├── todo_web/
+│   ├── tareas/
+│   │   ├── templates/tareas/
+│   │   │   ├── base.html          # Template base con Bootstrap
+│   │   │   ├── inicio.html        # Dashboard principal
+│   │   │   ├── lista_tareas.html  # Lista con filtros
+│   │   │   └── agregar_tarea.html # Formulario de creación
+│   │   ├── static/tareas/
+│   │   │   ├── css/style.css      # Estilos personalizados
+│   │   │   └── js/app.js          # JavaScript interactivo
+│   │   ├── models.py              # Modelo Tarea
+│   │   ├── views.py               # Lógica de negocio y vistas
+│   │   ├── forms.py               # Formularios
+│   │   └── urls.py                # Rutas de la aplicación
+│   ├── todo_web/
+│   │   ├── settings.py            # Configuración de Django
+│   │   └── urls.py                # URLs principales
+│   └── manage.py                  # Script de gestión de Django
+├── requirements.txt               # Dependencias del proyecto
+└── README.md                     # Documentación
 ```
+
+## 🗄️ Modelo de Datos
+
+### Tarea
+- **descripcion**: Texto de la tarea (máximo 255 caracteres)
+- **completado**: Estado booleano (completada/pendiente)
+- **prioridad**: Opciones: Alta, Media, Baja
+- **fecha_limite**: Fecha opcional de vencimiento
+- **tags**: Etiquetas para categorización
+
+## 🔄 Funcionalidades Técnicas
+
+### Vistas Basadas en Clases
+- **TareaListView**: Lista de tareas con filtros
+- **TareaCreateView**: Creación de nuevas tareas
+- **TareaFilterMixin**: Mixin para filtros comunes
+
+### Servicios
+- **TareaService**: Operaciones comunes con tareas
+- **PDFGenerator**: Generación de reportes PDF
+
+### Filtros
+- Filtrado por prioridad, estado y etiquetas
+- Filtros combinados y persistentes
+- Exportación respetando filtros activos
 
 ## 🚀 Despliegue
 
@@ -220,6 +250,7 @@ Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más det
 - **Bootstrap Team**: Por el increíble framework CSS
 - **Font Awesome**: Por los iconos profesionales
 - **Django Community**: Por el framework web robusto
+- **ReportLab**: Por la generación de PDFs
 
 ---
 
