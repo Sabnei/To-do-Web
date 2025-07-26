@@ -1,5 +1,8 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView
+from django.urls import reverse_lazy
+from django.contrib import messages
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
@@ -8,39 +11,196 @@ from .models import Tarea
 from .forms import TareaForm
 
 
-# Create your views here.
+class TareaFilterMixin:
+    """Mixin para aplicar filtros comunes a las tareas"""
+
+    def apply_filters(self, queryset):
+        """Aplicar filtros comunes a un queryset de tareas"""
+        prioridad = self.request.GET.get("prioridad")
+        etiqueta = self.request.GET.get("etiqueta")
+        completado = self.request.GET.get("completado")
+
+        if prioridad:
+            queryset = queryset.filter(prioridad=prioridad)
+        if etiqueta:
+            queryset = queryset.filter(tags__icontains=etiqueta)
+        if completado == "completado":
+            queryset = queryset.filter(completado=True)
+        elif completado == "pendiente":
+            queryset = queryset.filter(completado=False)
+
+        return queryset
+
+    def get_filter_context(self):
+        """Obtener contexto de filtros para templates"""
+        return {
+            "prioridad_seleccionada": self.request.GET.get("prioridad", ""),
+            "etiqueta": self.request.GET.get("etiqueta", ""),
+            "estado_seleccionado": self.request.GET.get("completado", ""),
+        }
+
+
+class TareaListView(TareaFilterMixin, ListView):
+    """Vista basada en clase para listar tareas con filtros"""
+
+    model = Tarea
+    template_name = "tareas/lista_tareas.html"
+    context_object_name = "tareas"
+
+    def get_queryset(self):
+        """Aplicar filtros a las tareas"""
+        queryset = Tarea.objects.all()
+        return self.apply_filters(queryset).order_by("completado", "prioridad")
+
+    def get_context_data(self, **kwargs):
+        """Agregar datos de contexto para los filtros"""
+        context = super().get_context_data(**kwargs)
+        context.update(self.get_filter_context())
+        return context
+
+
+class TareaCreateView(CreateView):
+    """Vista basada en clase para crear tareas"""
+
+    model = Tarea
+    form_class = TareaForm
+    template_name = "tareas/agregar_tarea.html"
+    success_url = reverse_lazy("lista_tareas")
+
+    def form_valid(self, form):
+        """Mensaje de éxito al crear tarea"""
+        messages.success(self.request, "Tarea creada exitosamente.")
+        return super().form_valid(form)
+
+
+class TareaService:
+    """Clase de servicio para operaciones comunes con tareas"""
+
+    @staticmethod
+    def get_filtered_tareas(request):
+        """Obtener tareas filtradas"""
+        tareas = Tarea.objects.all()
+
+        prioridad = request.GET.get("prioridad")
+        etiqueta = request.GET.get("etiqueta")
+
+        if prioridad:
+            tareas = tareas.filter(prioridad=prioridad)
+        if etiqueta:
+            tareas = tareas.filter(tags__icontains=etiqueta)
+
+        return tareas
+
+    @staticmethod
+    def get_statistics():
+        """Obtener estadísticas de tareas"""
+        total_tareas = Tarea.objects.count()
+        tareas_completadas = Tarea.objects.filter(completado=True).count()
+        tareas_pendientes = Tarea.objects.filter(completado=False).count()
+
+        # Tareas por prioridad
+        tareas_alta = Tarea.objects.filter(
+            prioridad="alta", completado=False
+        ).count()
+        tareas_media = Tarea.objects.filter(
+            prioridad="media", completado=False
+        ).count()
+        tareas_baja = Tarea.objects.filter(
+            prioridad="baja", completado=False
+        ).count()
+
+        return {
+            "total_tareas": total_tareas,
+            "tareas_completadas": tareas_completadas,
+            "tareas_pendientes": tareas_pendientes,
+            "tareas_alta": tareas_alta,
+            "tareas_media": tareas_media,
+            "tareas_baja": tareas_baja,
+        }
+
+    @staticmethod
+    def get_recent_tareas(limit=5):
+        """Obtener tareas recientes"""
+        return Tarea.objects.order_by("-id")[:limit]
+
+    @staticmethod
+    def get_urgent_tareas(limit=3):
+        """Obtener tareas urgentes (alta prioridad y pendientes)"""
+        return Tarea.objects.filter(prioridad="alta", completado=False)[:limit]
+
+
+class PDFGenerator:
+    """Clase para generar PDFs de tareas"""
+
+    @staticmethod
+    def create_pdf_content(canvas_obj, tareas, prioridad=None, etiqueta=None):
+        """Crear el contenido del PDF"""
+        width, height = letter
+        y = height - 40
+
+        # Título
+        canvas_obj.setFont("Helvetica-Bold", 16)
+        canvas_obj.drawString(40, y, "Lista de Tareas")
+        y -= 30
+
+        # Filtros aplicados
+        if prioridad or etiqueta:
+            canvas_obj.setFont("Helvetica", 12)
+            if prioridad:
+                canvas_obj.drawString(
+                    40, y, f"Filtro - Prioridad: {prioridad}"
+                )
+                y -= 15
+            if etiqueta:
+                canvas_obj.drawString(
+                    40, y, f"Filtro - Etiqueta contiene: {etiqueta}"
+                )
+                y -= 15
+            y -= 10
+
+        # Contenido de tareas
+        for tarea in tareas:
+            if y < 60:
+                canvas_obj.showPage()
+                y = height - 40
+
+            estado = "✔" if tarea.completado else "✖"
+            canvas_obj.setFont("Helvetica-Bold", 12)
+            canvas_obj.setFillColor(colors.black)
+            canvas_obj.drawString(
+                40,
+                y,
+                f"{tarea.id}. [{estado}] {tarea.descripcion} (Prioridad: {tarea.prioridad})",
+            )
+            y -= 18
+
+            if tarea.fecha_limite:
+                canvas_obj.setFont("Helvetica", 10)
+                canvas_obj.drawString(
+                    60, y, f"Fecha límite: {tarea.fecha_limite}"
+                )
+                y -= 14
+
+            if tarea.tags:
+                canvas_obj.drawString(60, y, f"Etiquetas: {tarea.tags}")
+                y -= 14
+
+            y -= 6
+            canvas_obj.setStrokeColor(colors.lightgrey)
+            canvas_obj.line(40, y, width - 40, y)
+            y -= 10
+
+
 def inicio(request):
     """Vista para la página de inicio con estadísticas"""
-    total_tareas = Tarea.objects.count()
-    tareas_completadas = Tarea.objects.filter(completado=True).count()
-    tareas_pendientes = Tarea.objects.filter(completado=False).count()
-
-    # Tareas por prioridad
-    tareas_alta = Tarea.objects.filter(
-        prioridad="alta", completado=False
-    ).count()
-    tareas_media = Tarea.objects.filter(
-        prioridad="media", completado=False
-    ).count()
-    tareas_baja = Tarea.objects.filter(
-        prioridad="baja", completado=False
-    ).count()
-
-    # Tareas recientes (últimas 5)
-    tareas_recientes = Tarea.objects.order_by("-id")[:5]
-
-    # Tareas urgentes (alta prioridad y pendientes)
-    tareas_urgentes = Tarea.objects.filter(prioridad="alta", completado=False)[
-        :3
-    ]
+    # Usar el servicio para obtener datos
+    service = TareaService()
+    stats = service.get_statistics()
+    tareas_recientes = service.get_recent_tareas()
+    tareas_urgentes = service.get_urgent_tareas()
 
     context = {
-        "total_tareas": total_tareas,
-        "tareas_completadas": tareas_completadas,
-        "tareas_pendientes": tareas_pendientes,
-        "tareas_alta": tareas_alta,
-        "tareas_media": tareas_media,
-        "tareas_baja": tareas_baja,
+        **stats,
         "tareas_recientes": tareas_recientes,
         "tareas_urgentes": tareas_urgentes,
     }
@@ -48,121 +208,50 @@ def inicio(request):
     return render(request, "tareas/inicio.html", context)
 
 
-def lista_tareas(request):
-    tareas = Tarea.objects.all()
-
-    prioridad = request.GET.get("prioridad")
-    etiqueta = request.GET.get("etiqueta")
-    completado = request.GET.get("completado")
-
-    if prioridad:
-        tareas = tareas.filter(prioridad=prioridad)
-
-    if etiqueta:
-        tareas = tareas.filter(tags__icontains=etiqueta)
-
-    if completado == "completado":
-        tareas = tareas.filter(completado=True)
-    elif completado == "pendiente":
-        tareas = tareas.filter(completado=False)
-
-    tareas = tareas.order_by("completado", "prioridad")
-
-    return render(
-        request,
-        "tareas/lista_tareas.html",
-        {
-            "tareas": tareas,
-            "prioridad_seleccionada": prioridad or "",
-            "etiqueta": etiqueta or "",
-            "estado_seleccionado": completado or "",
-        },
-    )
-
-
-def agregar_tarea(request):
-    if request.method == "POST":
-        form = TareaForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect("lista_tareas")
-    else:
-        form = TareaForm()
-    return render(request, "tareas/agregar_tarea.html", {"form": form})
-
-
 def completar_tarea(request, tarea_id):
+    """Cambiar el estado de completado de una tarea"""
     tarea = get_object_or_404(Tarea, id=tarea_id)
     tarea.completado = not tarea.completado
     tarea.save()
+
+    # Mensaje de confirmación
+    estado = "completada" if tarea.completado else "marcada como pendiente"
+    messages.success(request, f'Tarea "{tarea.descripcion}" {estado}.')
+
     return redirect("lista_tareas")
 
 
 def eliminar_tarea(request, tarea_id):
+    """Eliminar una tarea"""
     tarea = get_object_or_404(Tarea, id=tarea_id)
+    descripcion = tarea.descripcion
     tarea.delete()
+
+    messages.success(request, f'Tarea "{descripcion}" eliminada exitosamente.')
     return redirect("lista_tareas")
 
 
 def exportar_pdf(request):
-    tareas = Tarea.objects.all()
+    """Exportar tareas a PDF"""
+    # Usar el servicio para obtener tareas filtradas
+    service = TareaService()
+    tareas = service.get_filtered_tareas(request)
 
     prioridad = request.GET.get("prioridad")
     etiqueta = request.GET.get("etiqueta")
-
-    if prioridad:
-        tareas = tareas.filter(prioridad=prioridad)
-    if etiqueta:
-        tareas = tareas.filter(tags__icontains=etiqueta)
 
     response = HttpResponse(content_type="application/pdf")
     response["Content-Disposition"] = 'attachment; filename="tareas.pdf"'
 
     c = canvas.Canvas(response, pagesize=letter)
-    width, height = letter
-    y = height - 40
 
-    c.setFont("Helvetica-Bold", 16)
-    c.drawString(40, y, "Lista de Tareas")
-    y -= 30
-
-    if prioridad:
-        c.setFont("Helvetica", 12)
-        c.drawString(40, y, f"Filtro - Prioridad: {prioridad}")
-        y -= 15
-    if etiqueta:
-        c.drawString(40, y, f"Filtro - Etiqueta contiene: {etiqueta}")
-        y -= 15
-    y -= 10
-
-    for t in tareas:
-        if y < 60:
-            c.showPage()
-            y = height - 40
-
-        estado = "✔" if t.completado else "✖"
-        c.setFont("Helvetica-Bold", 12)
-        c.setFillColor(colors.black)
-        c.drawString(
-            40,
-            y,
-            f"{t.id}. [{estado}] {t.descripcion} (Prioridad: {t.prioridad})",
-        )
-        y -= 18
-
-        if t.fecha_limite:
-            c.setFont("Helvetica", 10)
-            c.drawString(60, y, f"Fecha límite: {t.fecha_limite}")
-            y -= 14
-
-        if t.tags:
-            c.drawString(60, y, f"Etiquetas: {t.tags}")
-            y -= 14
-
-        y -= 6
-        c.setStrokeColor(colors.lightgrey)
-        c.line(40, y, width - 40, y)
-        y -= 10
+    # Usar la clase PDFGenerator para crear el contenido
+    PDFGenerator.create_pdf_content(c, tareas, prioridad, etiqueta)
 
     c.save()
     return response
+
+
+# Mantener las vistas originales como alias para compatibilidad
+lista_tareas = TareaListView.as_view()
+agregar_tarea = TareaCreateView.as_view()
