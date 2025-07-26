@@ -202,37 +202,6 @@ To-do-Web/
 - Filtros combinados y persistentes
 - Exportación respetando filtros activos
 
-## 🚀 Despliegue
-
-### Heroku
-1. Crear `Procfile`:
-```
-web: gunicorn todo_web.wsgi --log-file -
-```
-
-2. Configurar variables de entorno:
-```bash
-heroku config:set SECRET_KEY=tu-clave-secreta
-heroku config:set DEBUG=False
-```
-
-3. Desplegar:
-```bash
-git push heroku main
-```
-
-### Docker
-1. Crear `Dockerfile`:
-```dockerfile
-FROM python:3.9
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install -r requirements.txt
-COPY . .
-EXPOSE 8000
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
-```
-
 ## 🤝 Contribuir
 
 1. Fork el proyecto
